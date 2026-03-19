@@ -70,6 +70,7 @@ function initialize() {
   bindEvents();
   syncSettingsInputs();
   applyTheme();
+  syncStickerLayerBounds();
   renderAll();
 }
 
@@ -162,6 +163,9 @@ function bindEvents() {
   window.addEventListener('pointermove', handleStickerPointerMove);
   window.addEventListener('pointerup', endStickerInteraction);
   window.addEventListener('pointercancel', endStickerInteraction);
+  window.addEventListener('resize', syncStickerLayerBounds);
+  window.addEventListener('scroll', syncStickerLayerBounds, { passive: true });
+  window.addEventListener('keydown', handleDecorateHotkeys);
 }
 
 function renderAll() {
@@ -169,6 +173,7 @@ function renderAll() {
   renderSidebar();
   renderLegend();
   renderSelectedDateOptions();
+  syncStickerLayerBounds();
   renderStickers();
   updateDecorateControls();
 }
@@ -554,6 +559,20 @@ function renderStickers() {
       rotateHandle.dataset.action = 'rotate';
       rotateHandle.setAttribute('aria-label', 'Rotate sticker');
       wrapper.append(rotateHandle);
+
+      if (sticker.id === selectedStickerId) {
+        const actionBar = document.createElement('div');
+        actionBar.className = 'sticker-action-bar';
+
+        const deleteAction = document.createElement('button');
+        deleteAction.type = 'button';
+        deleteAction.className = 'sticker-action-button';
+        deleteAction.dataset.action = 'delete';
+        deleteAction.textContent = 'Delete';
+        actionBar.append(deleteAction);
+
+        wrapper.append(actionBar);
+      }
     }
 
     stickerLayer.append(wrapper);
@@ -564,8 +583,8 @@ function addSticker(src) {
   const sticker = {
     id: createStickerId(),
     src,
-    x: 120 + (state.stickers.length * 18),
-    y: 120 + (state.stickers.length * 18),
+    x: window.scrollX + 120 + (state.stickers.length * 18),
+    y: window.scrollY + 120 + (state.stickers.length * 18),
     width: 140,
     height: 140,
     rotation: 0,
@@ -608,8 +627,8 @@ function handleStickerPointerDown(event) {
     stickerId: sticker.id,
     action,
     handle: event.target.dataset.handle || null,
-    startX: event.clientX,
-    startY: event.clientY,
+    startX: event.pageX,
+    startY: event.pageY,
     initialX: sticker.x,
     initialY: sticker.y,
     initialWidth: sticker.width,
@@ -629,8 +648,8 @@ function handleStickerPointerMove(event) {
   const sticker = getStickerById(stickerInteraction.stickerId);
   if (!sticker) return;
 
-  const deltaX = event.clientX - stickerInteraction.startX;
-  const deltaY = event.clientY - stickerInteraction.startY;
+  const deltaX = event.pageX - stickerInteraction.startX;
+  const deltaY = event.pageY - stickerInteraction.startY;
 
   if (stickerInteraction.action === 'move') {
     sticker.x = stickerInteraction.initialX + deltaX;
@@ -642,7 +661,7 @@ function handleStickerPointerMove(event) {
   }
 
   if (stickerInteraction.action === 'rotate') {
-    sticker.rotation = calculateRotation(stickerInteraction.centerX, stickerInteraction.centerY, event.clientX, event.clientY);
+    sticker.rotation = calculateRotation(stickerInteraction.centerX, stickerInteraction.centerY, event.pageX, event.pageY);
   }
 
   renderStickers();
@@ -684,6 +703,17 @@ function resizeSticker(sticker, interaction, deltaX, deltaY) {
 
 function calculateRotation(centerX, centerY, pointerX, pointerY) {
   return Math.round((Math.atan2(pointerY - centerY, pointerX - centerX) * 180) / Math.PI) + 90;
+}
+
+function syncStickerLayerBounds() {
+  stickerLayer.style.height = `${Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)}px`;
+}
+
+function handleDecorateHotkeys(event) {
+  if (!decorateMode || !selectedStickerId) return;
+  if (event.key === 'Delete' || event.key === 'Backspace') {
+    removeSticker(selectedStickerId);
+  }
 }
 
 function bringStickerToFront(stickerId) {
