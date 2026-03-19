@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Monthly Days Off Calendar</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="stickerLayer" class="sticker-layer" aria-hidden="true"></div>
+    <div class="floating-controls" id="decorateControls" hidden>
+      <button id="saveDecorations" class="floating-button secondary-button" type="button">Save</button>
+      <button id="addSticker" class="floating-button primary-button plus-button" type="button" aria-label="Add sticker">+</button>
+    </div>
+    <input id="stickerUpload" class="visually-hidden" type="file" accept="image/png" />
+
+    <div class="app-shell">
+      <div class="background-layer" id="backgroundLayer" aria-hidden="true"></div>
+      <header class="topbar card">
+        <div>
+          <p class="eyebrow">Planner</p>
+          <h1>Monthly Days Off Calendar</h1>
+          <p class="subtitle">Track days off, holidays, family occasions, and custom events with monthly accruals.</p>
+        </div>
+        <button id="openSettings" class="secondary-button" type="button">Settings</button>
+      </header>
+
+      <main class="layout">
+        <section class="calendar-panel card">
+          <div class="calendar-toolbar">
+            <button id="prevMonth" class="icon-button" type="button" aria-label="Previous month">&#10094;</button>
+            <div>
+              <h2 id="monthLabel"></h2>
+              <p id="monthMeta" class="muted"></p>
+            </div>
+            <button id="nextMonth" class="icon-button" type="button" aria-label="Next month">&#10095;</button>
+          </div>
+
+          <div class="weekday-row" id="weekdayRow"></div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </section>
+
+        <aside class="sidebar card">
+          <section class="summary-block">
+            <p class="eyebrow">Days off bank</p>
+            <div class="counter" id="daysOffCounter">0</div>
+            <p id="counterHelper" class="muted"></p>
+          </section>
+
+          <section class="summary-block">
+            <h3>Work start</h3>
+            <label class="stacked-field">
+              <span>Select work start date</span>
+              <input type="date" id="workStartDate" />
+            </label>
+            <p class="muted small">Days off accrue by +1 on each new month that starts after your work start date.</p>
+          </section>
+
+          <section class="summary-block stats-grid" id="statsGrid"></section>
+
+          <section class="summary-block">
+            <h3>Legend</h3>
+            <div class="legend-list" id="legendList"></div>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <dialog id="eventModal" class="modal">
+      <form method="dialog" class="modal-content">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Edit date</p>
+            <h3 id="modalDateLabel"></h3>
+          </div>
+          <button type="submit" class="icon-button ghost-button" aria-label="Close popup">&#10005;</button>
+        </div>
+
+        <div class="checkbox-list" id="eventOptions"></div>
+
+        <div class="modal-footer">
+          <button id="closeModal" type="submit" class="secondary-button">Done</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="settingsModal" class="modal settings-modal">
+      <form method="dialog" class="modal-content settings-content">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Customize</p>
+            <h3>Calendar settings</h3>
+          </div>
+          <button type="submit" class="icon-button ghost-button" aria-label="Close settings">&#10005;</button>
+        </div>
+
+        <div class="settings-grid">
+          <label class="stacked-field settings-span">
+            <span>Upload background image</span>
+            <input type="file" id="backgroundUpload" accept="image/*" />
+          </label>
+
+          <label class="stacked-field">
+            <span>Primary color</span>
+            <input type="color" id="primaryColor" />
+          </label>
+
+          <label class="stacked-field">
+            <span>Accent color</span>
+            <input type="color" id="accentColor" />
+          </label>
+
+          <label class="stacked-field">
+            <span>Surface color</span>
+            <input type="color" id="surfaceColor" />
+          </label>
+
+          <label class="stacked-field">
+            <span>Day off color</span>
+            <input type="color" id="dayOffColor" />
+          </label>
+
+          <label class="stacked-field">
+            <span>Holiday color</span>
+            <input type="color" id="holidayColor" />
+          </label>
+
+          <label class="stacked-field">
+            <span>Family occasion color</span>
+            <input type="color" id="familyColor" />
+          </label>
+
+          <label class="stacked-field">
+            <span>Custom event color</span>
+            <input type="color" id="customColor" />
+          </label>
+
+          <label class="stacked-field settings-span">
+            <span>Default custom event text</span>
+            <input type="text" id="customEventLabel" maxlength="24" placeholder="Custom event" />
+          </label>
+        </div>
+
+        <div class="modal-footer between settings-footer">
+          <div class="settings-actions">
+            <button id="resetSettings" type="button" class="secondary-button">Reset theme</button>
+            <button id="toggleDecorateMode" type="button" class="secondary-button">Decorate mode</button>
+          </div>
+          <button type="submit" class="primary-button">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <template id="statCardTemplate">
+      <article class="stat-card">
+        <p class="stat-label"></p>
+        <strong class="stat-value"></strong>
+      </article>
+    </template>
+
+    <script src="script.js"></script>
+  </body>
+</html>
