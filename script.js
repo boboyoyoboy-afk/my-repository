@@ -15,11 +15,15 @@ const defaults = {
   },
   customEventLabel: 'Custom event',
   events: {},
+  stickers: [],
 };
 
 const state = loadState();
 let viewDate = new Date();
 let selectedDateKey = formatDateKey(new Date());
+let decorateMode = false;
+let selectedStickerId = null;
+let stickerInteraction = null;
 
 const monthLabel = document.getElementById('monthLabel');
 const monthMeta = document.getElementById('monthMeta');
@@ -45,12 +49,18 @@ const backgroundUploadInput = document.getElementById('backgroundUpload');
 const customEventLabelInput = document.getElementById('customEventLabel');
 const backgroundLayer = document.getElementById('backgroundLayer');
 const statCardTemplate = document.getElementById('statCardTemplate');
+const stickerLayer = document.getElementById('stickerLayer');
+const decorateControls = document.getElementById('decorateControls');
+const addStickerButton = document.getElementById('addSticker');
+const saveDecorationsButton = document.getElementById('saveDecorations');
+const stickerUploadInput = document.getElementById('stickerUpload');
+const toggleDecorateModeButton = document.getElementById('toggleDecorateMode');
 
 const eventDefinitions = () => ([
-  { key: 'dayOff', label: 'Day off', color: 'var(--dayoff)', affectsCounter: true },
-  { key: 'nationalHoliday', label: 'National holiday', color: 'var(--holiday)', affectsCounter: false },
-  { key: 'familyOccasion', label: 'Family occasion', color: 'var(--family)', affectsCounter: false },
-  { key: 'custom', label: state.customEventLabel || defaults.customEventLabel, color: 'var(--custom)', affectsCounter: false },
+  { key: 'dayOff', label: 'Day off', color: 'var(--dayoff)' },
+  { key: 'nationalHoliday', label: 'National holiday', color: 'var(--holiday)' },
+  { key: 'familyOccasion', label: 'Family occasion', color: 'var(--family)' },
+  { key: 'custom', label: state.customEventLabel || defaults.customEventLabel, color: 'var(--custom)' },
 ]);
 
 initialize();
@@ -126,6 +136,32 @@ function bindEvents() {
   eventModal.addEventListener('close', () => {
     renderAll();
   });
+
+  toggleDecorateModeButton.addEventListener('click', () => {
+    settingsModal.close();
+    enterDecorateMode();
+  });
+
+  addStickerButton.addEventListener('click', () => stickerUploadInput.click());
+  saveDecorationsButton.addEventListener('click', () => exitDecorateMode());
+
+  stickerUploadInput.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.type !== 'image/png') {
+      stickerUploadInput.value = '';
+      return;
+    }
+
+    const src = await fileToDataUrl(file);
+    addSticker(src);
+    stickerUploadInput.value = '';
+  });
+
+  stickerLayer.addEventListener('pointerdown', handleStickerPointerDown);
+  window.addEventListener('pointermove', handleStickerPointerMove);
+  window.addEventListener('pointerup', endStickerInteraction);
+  window.addEventListener('pointercancel', endStickerInteraction);
 }
 
 function renderAll() {
@@ -133,6 +169,8 @@ function renderAll() {
   renderSidebar();
   renderLegend();
   renderSelectedDateOptions();
+  renderStickers();
+  updateDecorateControls();
 }
 
 function renderWeekdays() {
@@ -294,7 +332,6 @@ function renderSelectedDateOptions() {
     const text = document.createElement('span');
     text.textContent = definition.key === 'custom' ? 'Custom event' : definition.label;
     left.append(checkbox, text);
-
     row.append(left);
 
     if (definition.key === 'custom') {
@@ -326,11 +363,6 @@ function openDateModal(dateKey) {
 function toggleEvent(dateKey, eventKey, enabled) {
   const entry = ensureDateEntry(dateKey);
   entry.types[eventKey] = enabled;
-
-  if (!enabled && eventKey === 'custom' && !entry.customLabel) {
-    entry.customLabel = '';
-  }
-
   cleanupDateEntry(dateKey);
   saveState();
   renderAll();
@@ -455,9 +487,236 @@ function applyTheme() {
   backgroundLayer.style.backgroundImage = state.backgroundImage ? `url(${state.backgroundImage})` : 'none';
 }
 
+function enterDecorateMode() {
+  decorateMode = true;
+  stickerLayer.classList.add('decorate-active');
+  decorateControls.hidden = false;
+  renderStickers();
+}
+
+function exitDecorateMode() {
+  decorateMode = false;
+  selectedStickerId = null;
+  stickerInteraction = null;
+  stickerLayer.classList.remove('decorate-active');
+  decorateControls.hidden = true;
+  saveState();
+  renderStickers();
+}
+
+function updateDecorateControls() {
+  decorateControls.hidden = !decorateMode;
+  stickerLayer.classList.toggle('decorate-active', decorateMode);
+}
+
+function renderStickers() {
+  stickerLayer.innerHTML = '';
+
+  const stickers = [...state.stickers].sort((left, right) => left.zIndex - right.zIndex);
+  stickers.forEach((sticker) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = `sticker${decorateMode ? '' : ' locked'}${sticker.id === selectedStickerId ? ' selected' : ''}`;
+    wrapper.dataset.stickerId = sticker.id;
+    wrapper.style.left = `${sticker.x}px`;
+    wrapper.style.top = `${sticker.y}px`;
+    wrapper.style.width = `${sticker.width}px`;
+    wrapper.style.height = `${sticker.height}px`;
+    wrapper.style.transform = `rotate(${sticker.rotation}deg)`;
+    wrapper.style.zIndex = String(sticker.zIndex);
+
+    const image = document.createElement('img');
+    image.src = sticker.src;
+    image.alt = 'Decorative sticker';
+    wrapper.append(image);
+
+    if (decorateMode) {
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.className = 'sticker-delete';
+      deleteButton.dataset.action = 'delete';
+      deleteButton.textContent = '×';
+      deleteButton.setAttribute('aria-label', 'Delete sticker');
+      wrapper.append(deleteButton);
+
+      ['nw', 'ne', 'sw', 'se'].forEach((handle) => {
+        const resizeHandle = document.createElement('button');
+        resizeHandle.type = 'button';
+        resizeHandle.className = 'resize-handle';
+        resizeHandle.dataset.action = 'resize';
+        resizeHandle.dataset.handle = handle;
+        resizeHandle.setAttribute('aria-label', `Resize sticker from ${handle}`);
+        wrapper.append(resizeHandle);
+      });
+
+      const rotateHandle = document.createElement('button');
+      rotateHandle.type = 'button';
+      rotateHandle.className = 'rotate-handle';
+      rotateHandle.dataset.action = 'rotate';
+      rotateHandle.setAttribute('aria-label', 'Rotate sticker');
+      wrapper.append(rotateHandle);
+    }
+
+    stickerLayer.append(wrapper);
+  });
+}
+
+function addSticker(src) {
+  const sticker = {
+    id: createStickerId(),
+    src,
+    x: 120 + (state.stickers.length * 18),
+    y: 120 + (state.stickers.length * 18),
+    width: 140,
+    height: 140,
+    rotation: 0,
+    zIndex: getNextStickerZIndex(),
+  };
+
+  state.stickers.push(sticker);
+  selectedStickerId = sticker.id;
+  saveState();
+  renderStickers();
+}
+
+function handleStickerPointerDown(event) {
+  if (!decorateMode) return;
+
+  const stickerElement = event.target.closest('.sticker');
+  if (!stickerElement) {
+    selectedStickerId = null;
+    renderStickers();
+    return;
+  }
+
+  const sticker = getStickerById(stickerElement.dataset.stickerId);
+  if (!sticker) return;
+
+  selectedStickerId = sticker.id;
+  const action = event.target.dataset.action || 'move';
+
+  if (action === 'delete') {
+    removeSticker(sticker.id);
+    return;
+  }
+
+  bringStickerToFront(sticker.id);
+  const rect = stickerElement.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+
+  stickerInteraction = {
+    stickerId: sticker.id,
+    action,
+    handle: event.target.dataset.handle || null,
+    startX: event.clientX,
+    startY: event.clientY,
+    initialX: sticker.x,
+    initialY: sticker.y,
+    initialWidth: sticker.width,
+    initialHeight: sticker.height,
+    initialRotation: sticker.rotation,
+    centerX,
+    centerY,
+  };
+
+  event.preventDefault();
+  renderStickers();
+}
+
+function handleStickerPointerMove(event) {
+  if (!stickerInteraction) return;
+
+  const sticker = getStickerById(stickerInteraction.stickerId);
+  if (!sticker) return;
+
+  const deltaX = event.clientX - stickerInteraction.startX;
+  const deltaY = event.clientY - stickerInteraction.startY;
+
+  if (stickerInteraction.action === 'move') {
+    sticker.x = stickerInteraction.initialX + deltaX;
+    sticker.y = stickerInteraction.initialY + deltaY;
+  }
+
+  if (stickerInteraction.action === 'resize') {
+    resizeSticker(sticker, stickerInteraction, deltaX, deltaY);
+  }
+
+  if (stickerInteraction.action === 'rotate') {
+    sticker.rotation = calculateRotation(stickerInteraction.centerX, stickerInteraction.centerY, event.clientX, event.clientY);
+  }
+
+  renderStickers();
+}
+
+function endStickerInteraction() {
+  if (!stickerInteraction) return;
+  stickerInteraction = null;
+  saveState();
+}
+
+function resizeSticker(sticker, interaction, deltaX, deltaY) {
+  const minimumSize = 40;
+  let width = interaction.initialWidth;
+  let height = interaction.initialHeight;
+  let x = interaction.initialX;
+  let y = interaction.initialY;
+
+  if (interaction.handle.includes('e')) {
+    width = Math.max(minimumSize, interaction.initialWidth + deltaX);
+  }
+  if (interaction.handle.includes('s')) {
+    height = Math.max(minimumSize, interaction.initialHeight + deltaY);
+  }
+  if (interaction.handle.includes('w')) {
+    width = Math.max(minimumSize, interaction.initialWidth - deltaX);
+    x = interaction.initialX + (interaction.initialWidth - width);
+  }
+  if (interaction.handle.includes('n')) {
+    height = Math.max(minimumSize, interaction.initialHeight - deltaY);
+    y = interaction.initialY + (interaction.initialHeight - height);
+  }
+
+  sticker.width = width;
+  sticker.height = height;
+  sticker.x = x;
+  sticker.y = y;
+}
+
+function calculateRotation(centerX, centerY, pointerX, pointerY) {
+  return Math.round((Math.atan2(pointerY - centerY, pointerX - centerX) * 180) / Math.PI) + 90;
+}
+
+function bringStickerToFront(stickerId) {
+  const sticker = getStickerById(stickerId);
+  if (!sticker) return;
+  sticker.zIndex = getNextStickerZIndex();
+  saveState();
+}
+
+function removeSticker(stickerId) {
+  state.stickers = state.stickers.filter((sticker) => sticker.id !== stickerId);
+  if (selectedStickerId === stickerId) {
+    selectedStickerId = null;
+  }
+  saveState();
+  renderStickers();
+}
+
+function getStickerById(stickerId) {
+  return state.stickers.find((sticker) => sticker.id === stickerId);
+}
+
+function getNextStickerZIndex() {
+  const highest = state.stickers.reduce((max, sticker) => Math.max(max, sticker.zIndex || 0), 0);
+  return highest + 1;
+}
+
+function createStickerId() {
+  return `sticker-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 function getDateEntry(dateKey) {
-  const entry = normalizeDateEntry(state.events[dateKey]);
-  return entry;
+  return normalizeDateEntry(state.events[dateKey]);
 }
 
 function ensureDateEntry(dateKey) {
@@ -503,8 +762,7 @@ function normalizeDateEntry(entry) {
 }
 
 function getActiveEventKeys(dateKey) {
-  const entry = getDateEntry(dateKey);
-  return Object.entries(entry.types)
+  return Object.entries(getDateEntry(dateKey).types)
     .filter(([, enabled]) => enabled)
     .map(([key]) => key);
 }
@@ -541,12 +799,14 @@ function loadState() {
         },
       },
       events: saved?.events || {},
+      stickers: Array.isArray(saved?.stickers) ? saved.stickers : [],
     };
   } catch {
     return {
       ...defaults,
       theme: cloneTheme(defaults.theme),
       events: {},
+      stickers: [],
     };
   }
 }
