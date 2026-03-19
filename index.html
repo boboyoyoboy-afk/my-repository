@@ -13,7 +13,7 @@
         <div>
           <p class="eyebrow">Planner</p>
           <h1>Monthly Days Off Calendar</h1>
-          <p class="subtitle">Track days off, holidays, family occasions, and your own custom event type.</p>
+          <p class="subtitle">Track days off, holidays, family occasions, and custom events with monthly accruals.</p>
         </div>
         <button id="openSettings" class="secondary-button" type="button">Settings</button>
       </header>
@@ -88,7 +88,7 @@
         </div>
 
         <div class="settings-grid">
-          <label class="stacked-field">
+          <label class="stacked-field settings-span">
             <span>Upload background image</span>
             <input type="file" id="backgroundUpload" accept="image/*" />
           </label>
@@ -108,8 +108,28 @@
             <input type="color" id="surfaceColor" />
           </label>
 
+          <label class="stacked-field">
+            <span>Day off color</span>
+            <input type="color" id="dayOffColor" />
+          </label>
+
+          <label class="stacked-field">
+            <span>Holiday color</span>
+            <input type="color" id="holidayColor" />
+          </label>
+
+          <label class="stacked-field">
+            <span>Family occasion color</span>
+            <input type="color" id="familyColor" />
+          </label>
+
+          <label class="stacked-field">
+            <span>Custom event color</span>
+            <input type="color" id="customColor" />
+          </label>
+
           <label class="stacked-field settings-span">
-            <span>Custom event label</span>
+            <span>Default custom event text</span>
             <input type="text" id="customEventLabel" maxlength="24" placeholder="Custom event" />
           </label>
         </div>

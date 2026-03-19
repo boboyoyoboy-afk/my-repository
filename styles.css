@@ -137,12 +137,18 @@ p {
   flex-direction: column;
   gap: 10px;
   transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  cursor: pointer;
 }
 
 .day-cell:hover {
   transform: translateY(-2px);
   border-color: rgba(82, 99, 255, 0.4);
   box-shadow: 0 14px 28px rgba(82, 99, 255, 0.12);
+}
+
+.day-cell:focus-visible {
+  outline: 2px solid rgba(82, 99, 255, 0.35);
+  outline-offset: 2px;
 }
 
 .day-cell.outside {
@@ -190,10 +196,21 @@ p {
   color: #fff;
 }
 
-.event-pill[data-type="dayOff"] { background: var(--dayoff); }
-.event-pill[data-type="nationalHoliday"] { background: var(--holiday); }
-.event-pill[data-type="familyOccasion"] { background: var(--family); }
-.event-pill[data-type="custom"] { background: var(--custom); }
+.event-pill[data-type="dayOff"] {
+  background: var(--dayoff);
+}
+
+.event-pill[data-type="nationalHoliday"] {
+  background: var(--holiday);
+}
+
+.event-pill[data-type="familyOccasion"] {
+  background: var(--family);
+}
+
+.event-pill[data-type="custom"] {
+  background: var(--custom);
+}
 
 .delete-pill {
   border: none;
@@ -318,6 +335,21 @@ p {
   background: rgba(255, 255, 255, 0.78);
 }
 
+.inline-text-input {
+  min-width: 0;
+  flex: 1;
+  border: none;
+  border-bottom: 2px solid rgba(31, 36, 64, 0.18);
+  border-radius: 0;
+  padding: 6px 4px;
+  background: transparent;
+}
+
+.inline-text-input:focus {
+  outline: none;
+  border-bottom-color: var(--primary);
+}
+
 .small {
   font-size: 0.88rem;
 }
@@ -326,7 +358,7 @@ p {
   border: none;
   border-radius: 24px;
   padding: 0;
-  width: min(520px, calc(100vw - 24px));
+  width: min(640px, calc(100vw - 24px));
   box-shadow: var(--shadow);
 }
 
@@ -368,11 +400,22 @@ p {
   border-radius: 18px;
 }
 
+.checkbox-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 170px;
+}
+
+.custom-row {
+  align-items: center;
+}
+
 .checkbox-item span {
   font-weight: 600;
 }
 
-.checkbox-item input {
+.checkbox-item input[type="checkbox"] {
   width: 18px;
   height: 18px;
 }
@@ -398,7 +441,8 @@ p {
   .calendar-toolbar,
   .modal-header,
   .modal-footer,
-  .between {
+  .between,
+  .custom-row {
     flex-direction: column;
     align-items: stretch;
   }
@@ -415,5 +459,9 @@ p {
   .settings-grid,
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .checkbox-left {
+    min-width: 0;
   }
 }
