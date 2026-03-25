@@ -1,0 +1,12 @@
+{
+  "name": "daily-task-checklist",
+  "version": "1.0.0",
+  "description": "Desktop task checklist that opens at startup",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^36.0.0"
+  }
+}
