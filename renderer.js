@@ -12,6 +12,7 @@ const textColorInput = document.getElementById('text-color');
 const bgImageInput = document.getElementById('bg-image');
 const clearBgBtn = document.getElementById('clear-bg');
 const backgroundLayer = document.getElementById('background-layer');
+const confettiLayer = document.getElementById('confetti-layer');
 
 let tasks = readJson(TASK_KEY, []);
 let settings = readJson(SETTINGS_KEY, {
@@ -20,6 +21,7 @@ let settings = readJson(SETTINGS_KEY, {
   bgData: '',
 });
 let draggedTaskId = null;
+let hadAllCompleted = false;
 
 resetTasksIfNewDay();
 applySettings();
@@ -140,6 +142,8 @@ function renderTasks() {
     li.append(checkbox, taskText, deleteBtn);
     taskListEl.appendChild(li);
   });
+
+  maybeCelebrateCompletion();
 }
 
 function editTask(id) {
@@ -214,4 +218,35 @@ function toDataUrl(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+function maybeCelebrateCompletion() {
+  const hasTasks = tasks.length > 0;
+  const hasAllCompleted = hasTasks && tasks.every((task) => task.completed);
+
+  if (hasAllCompleted && !hadAllCompleted) {
+    launchConfetti();
+  }
+
+  hadAllCompleted = hasAllCompleted;
+}
+
+function launchConfetti() {
+  const colors = ['#ff5e7e', '#ffd166', '#4cc9f0', '#7bff8a', '#b892ff', '#ff9f1c'];
+  const pieces = 120;
+
+  for (let i = 0; i < pieces; i += 1) {
+    const piece = document.createElement('span');
+    piece.className = 'confetti-piece';
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.setProperty('--x-shift', `${Math.random() * 220 - 110}px`);
+    piece.style.animationDuration = `${1300 + Math.random() * 1100}ms`;
+    piece.style.animationDelay = `${Math.random() * 180}ms`;
+
+    confettiLayer.appendChild(piece);
+    piece.addEventListener('animationend', () => {
+      piece.remove();
+    });
+  }
 }

@@ -26,6 +26,33 @@ body {
   pointer-events: none;
 }
 
+#confetti-layer {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -12px;
+  width: 8px;
+  height: 14px;
+  opacity: 0.9;
+  animation: confetti-fall 1800ms linear forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  100% {
+    transform: translate3d(var(--x-shift), 105vh, 0) rotate(680deg);
+    opacity: 0;
+  }
+}
+
 .app {
   position: relative;
   width: min(560px, 92vw);
