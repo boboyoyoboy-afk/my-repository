@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daily Task Checklist</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="background-layer"></div>
+    <main class="app">
+      <header class="header">
+        <h1>Today's Checklist</h1>
+        <div class="header-actions">
+          <button id="customize-btn" class="icon-btn" title="Customize UI">⚙</button>
+          <button id="add-btn" class="icon-btn plus" title="Add task">+</button>
+        </div>
+      </header>
+
+      <ul id="task-list" class="task-list"></ul>
+    </main>
+
+    <dialog id="customize-dialog">
+      <form id="customize-form" method="dialog">
+        <h2>Customize</h2>
+
+        <label>
+          UI color
+          <input id="ui-color" type="color" />
+        </label>
+
+        <label>
+          Text color
+          <input id="text-color" type="color" />
+        </label>
+
+        <label>
+          Background image
+          <input id="bg-image" type="file" accept="image/*" />
+        </label>
+
+        <div class="dialog-actions">
+          <button type="button" id="clear-bg">Remove Background</button>
+          <button type="button" id="close-customize">Done</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>
