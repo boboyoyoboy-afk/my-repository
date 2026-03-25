@@ -1,0 +1,136 @@
+:root {
+  --ui-color: #f5f7ff;
+  --text-color: #1e2235;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  color: var(--text-color);
+  background: #e7ecff;
+  min-height: 100vh;
+}
+
+#background-layer {
+  position: fixed;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.app {
+  position: relative;
+  width: min(760px, 92vw);
+  margin: 48px auto;
+  background: var(--ui-color);
+  border-radius: 18px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  padding: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.header h1 {
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  border: 0;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--ui-color) 88%, #5568ff 12%);
+  color: var(--text-color);
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.icon-btn.plus {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.task-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.task-item:hover {
+  background: color-mix(in oklab, var(--ui-color) 82%, #5a6af5 18%);
+}
+
+.task-item .task-text {
+  flex: 1;
+  cursor: text;
+  word-break: break-word;
+}
+
+.task-item.completed .task-text {
+  text-decoration: line-through;
+  opacity: 0.65;
+}
+
+.delete-btn {
+  border: none;
+  background: transparent;
+  color: #df2e2e;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.task-item:hover .delete-btn {
+  opacity: 1;
+}
+
+#customize-dialog {
+  border: none;
+  border-radius: 14px;
+  width: min(420px, 90vw);
+  padding: 0;
+}
+
+#customize-form {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+#customize-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
